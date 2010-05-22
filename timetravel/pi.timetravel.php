@@ -33,15 +33,57 @@ class Timetravel {
 	*/
 	var $tagdata = '';
 
+	/**
+	* TODO
+	*
+	* @var array
+	*/
+	var $periods = array();
+	
+	/**
+	* TODO
+	*
+	* @var int
+	*/
+	var $oldest = 0;
+	
+	/**
+	* TODO
+	*
+	* @var int
+	*/
+	var $older = 0;
+	
+	/**
+	* TODO
+	*
+	* @var int
+	*/
+	var $current = 0;
+
+	/**
+	* TODO
+	*
+	* @var int
+	*/
+	var $newer = 0;
+	
+	/**
+	* TODO
+	*
+	* @var int
+	*/
+	var $newest = 0;
+
   /**
 	* A list of formats used by each different type of timetravel.
 	*
 	* @var array
 	*/
 	var $formats = array(
-	  'day' => '%Y%m%d',
-    'month' => '%Y%m',
-    'year' => '%Y'
+	  'day' => 'Ymd',
+    'month' => 'Ym',
+    'year' => 'Y'
 	);
 	
   /**
@@ -50,9 +92,9 @@ class Timetravel {
   * @var array
   */
   var $url_formats = array(
-    'day' => '%Y/%m/%d',
-    'month' => '%Y/%m',
-    'year' => '%Y'
+    'day' => 'Y/m/d',
+    'month' => 'Y/m',
+    'year' => 'Y'
   );
 
 
@@ -164,21 +206,6 @@ class Timetravel {
   */
   var $username = array();
 
-
-	/**
-	* TODO
-	*
-	* @var array
-	*/
-	var $periods = array();
-
-	/**
-	* TODO
-	*
-	* @var int
-	*/
-	var $current;
-
 	/**
 	* PHP4 Constructor
 	*
@@ -215,47 +242,45 @@ class Timetravel {
 
   function _parse_template()
   {
-  
+    // Find a parse the {current} tag
     if (strpos($this->tagdata, LD.'current') !== FALSE && preg_match_all("/".LD."current\s+format=([\"\'])([^\\1]*?)\\1".RD."/", $this->tagdata, $matches))
     {				
     	for ($j = 0; $j < count($matches[0]); $j++)
     	{				
-    		$tagdata = str_replace($matches[0][$j], $this->EE->localize->decode_date($matches[2][$j], $this->EE->localize->now), $this->tagdata);	
+    		$tagdata = str_replace($matches[0][$j], $this->EE->localize->decode_date($matches[2][$j], $this->current), $this->tagdata);
     	}
     }
+    $tagdata = str_replace(LD.'current'.RD, $this->current, $tagdata);
 
-    $tagdata = str_replace(LD.'current'.RD, $this->EE->localize->now, $tagdata);
-    
-    
-    
+
     foreach ($this->EE->TMPL->var_pair as $key => $val)
     {
       switch($key)
       {
-        
         case 'oldest':
-          
-          
-          
-          break;
-          
         case 'older':
-
-          break;
-          
         case 'newer':
-
-          break;
-          
         case 'newest':
-
-          break;        
+          $time = $this->$key;
+          break;
       }
+      
+      $inner = $this->EE->TMPL->fetch_data_between_var_pairs($tagdata, $key);
+      
+      if (strpos($inner, 'path=') !== FALSE)
+  		{
+  		  $tp = new Timepath();
+  		  $tp->time = date($this->url_formats[$this->by], $time);
+        $inner = preg_replace_callback("/".LD."\s*path=(.*?)".RD."/", array(&$tp, 'alter_path'), $inner);
+  		}
+  		
+      $tagdata = preg_replace("/".LD.$key.RD."(.*?)".LD.'\/'.$key.RD."/s", $inner, $tagdata);
     }
     
     $this->return_data = $tagdata;
   }
   // END _parse_template
+
 
   function _fetch_params()
   {
@@ -267,6 +292,9 @@ class Timetravel {
   function _build_query()
   {
     // Do something awesome
+    
+    $this->current = $this->EE->localize->now;
+    
   }
   // END _build_query
   
@@ -339,6 +367,26 @@ function debug($vars) {
   echo "<pre>";
   print_r($vars);
   echo "</pre>";
+}
+
+/**
+* This object is used as a placeholder for a preg_replace_callback function
+*/
+class Timepath
+{
+  var $time;
+  
+  function alter_path($matches) 
+  {
+    $src = str_replace(array('"', "'"), '', $matches[1]);
+    
+    $path = explode('/', $src);
+    $time = explode('/', $this->time);
+    
+    $repl = implode('/', array_merge($path, $time));
+    return str_replace($matches[1], "'".$repl."'", $matches[0]);
+    
+  }
 }
 
 
