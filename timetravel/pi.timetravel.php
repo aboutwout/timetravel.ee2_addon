@@ -66,13 +66,12 @@ class Timetravel {
   */
   var $author_id = array();
 
-	/**
-	* Period used to split the entries
-	*
-	* @var string
-	*/
-	var $by = 'day';
-
+  /**
+  * Period used to split the entries
+  *
+  * @var string
+  */
+  var $by = 'day';
   
   /**
   * ...
@@ -207,15 +206,63 @@ class Timetravel {
 	  $this->tagdata = $this->EE->TMPL->tagdata;
     
     $this->_build_query();
+    $this->_parse_template();
+    
+    return $this->return_data;
  
 	}
 	// END constructor
 
   function _parse_template()
   {
+  
+    if (strpos($this->tagdata, LD.'current') !== FALSE && preg_match_all("/".LD."current\s+format=([\"\'])([^\\1]*?)\\1".RD."/", $this->tagdata, $matches))
+    {				
+    	for ($j = 0; $j < count($matches[0]); $j++)
+    	{				
+    		$tagdata = str_replace($matches[0][$j], $this->EE->localize->decode_date($matches[2][$j], $this->EE->localize->now), $this->tagdata);	
+    	}
+    }
 
+    $tagdata = str_replace(LD.'current'.RD, $this->EE->localize->now, $tagdata);
+    
+    
+    
+    foreach ($this->EE->TMPL->var_pair as $key => $val)
+    {
+      switch($key)
+      {
+        
+        case 'oldest':
+          
+          
+          
+          break;
+          
+        case 'older':
+
+          break;
+          
+        case 'newer':
+
+          break;
+          
+        case 'newest':
+
+          break;        
+      }
+    }
+    
+    $this->return_data = $tagdata;
   }
   // END _parse_template
+
+  function _fetch_params()
+  {
+    // Do something awesome
+  }
+  // END _fetch_params
+
   
   function _build_query()
   {
@@ -249,10 +296,36 @@ class Timetravel {
 	function usage()
 	{
 		ob_start(); 
-		?>
-		<?php
+?>
+		
+  {exp:timetravel
+    by='day'
+    author_id='1'
+    category='1'
+    category_group='1'
+    channel='static'
+    entry_id_from='1'
+    entry_id_to='20'
+    group_id=''
+    show_expired='yes'
+    show_future='yes'
+    status='open'
+    start_on='2004-06-05 20:00'
+    stop_before='2010-06-05 20:00'
+    uncategorized_entries='no'
+    username='wouter'
+  }
+
+  {oldest}<a href="{path='plugins/timetravel'}">&laquo;Oldest</a>{/oldest} 
+  {older}<a href="{path='plugins/timetravel'}">&lsaquo;Older</a>{/older} 
+  <strong>{current format='%F %j%S, %Y'}</strong>
+  {newer}<a href="{path='plugins/timetravel'}">Newer&rsaquo;</a>{/newer} 
+  {newest}<a href="{path='plugins/timetravel'}">Newest&raquo;</a>{/newest}
+
+    {/exp:timetravel}
+		
+<?php
 		$buffer = ob_get_contents();
-  
 		ob_end_clean(); 
 
 		return $buffer;
@@ -261,5 +334,12 @@ class Timetravel {
 
 }
 // END CLASS
+
+function debug($vars) {
+  echo "<pre>";
+  print_r($vars);
+  echo "</pre>";
+}
+
 
 /* End of file pi.timetravel.php */
