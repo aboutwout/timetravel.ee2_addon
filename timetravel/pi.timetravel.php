@@ -168,7 +168,7 @@ class Timetravel {
       
       if (strpos($inner, 'path=') !== FALSE)
   		{
-  		  $tp = new Timepath();
+  		  $tp = new Timetravel_path();
   		  $tp->time = date($this->url_formats[$this->by], $time);
         $inner = preg_replace_callback("/".LD."\s*path=(.*?)".RD."/", array(&$tp, 'alter_path'), $inner);
   		}
@@ -366,7 +366,7 @@ If you are using Timetravel to wakl through years, you need to add year='{segmen
 * This object is used as a placeholder for the preg_replace_callback
 * function that alters the path variable.
 */
-class Timepath
+class Timetravel_path
 {
   var $time;
   
