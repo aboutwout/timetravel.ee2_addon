@@ -10,21 +10,21 @@
 
 ### Parameters
 
- * by  : day|month|year
- * author_id : Member id
- * category  : Category id
- * category_group  : Category Group id
- * channel : Channel short name
- * entry_id_from : Entry id
- * entry_id_to : Entry id
- * group_id  : Member group id
- * show_expired  : yes|no
- * show_future_entries : yes|no
- * status  : Status
- * start_on  : Date (%Y-%m-%d %H:%i)
- * stop_before : Date (%Y-%m-%d %H:%i)
- * uncategorized_entries : yes|no
- * username  : Member username
+ * by  = day|month|year
+ * author_id = Member id
+ * category  = Category id
+ * category_group  = Category Group id
+ * channel = Channel short name
+ * entry_id_from = Entry id
+ * entry_id_to = Entry id
+ * group_id  = Member group id
+ * show_expired  = yes|no
+ * show_future_entries = yes|no
+ * status  = Status
+ * start_on  = Date (%Y-%m-%d %H:%i)
+ * stop_before = Date (%Y-%m-%d %H:%i)
+ * uncategorized_entries = yes|no
+ * username  = Member username
 
 ## Note
 
