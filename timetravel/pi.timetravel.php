@@ -2,7 +2,7 @@
 
 $plugin_info = array(
 	'pi_name'			=> 'Timetravel',
-	'pi_version'		=> '0.1',
+	'pi_version'		=> '0.9',
 	'pi_author'			=> 'Wouter Vervloet',
 	'pi_author_url'		=> '',
 	'pi_description'	=> 'An easy way to navigate through entries by day, month or year',
@@ -13,7 +13,7 @@ $plugin_info = array(
 * Timetravel Plugin class
 *
 * @package		  timetravel-ee2_addon
-* @version			0.4.5
+* @version			0.9
 * @author			  Wouter Vervloet <wouter@baseworks.nl>
 * @license			http://creativecommons.org/licenses/by-sa/3.0/
 */
