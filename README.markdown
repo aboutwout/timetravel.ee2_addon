@@ -7,6 +7,10 @@
       {newer}<a href="{path='group/template'}">Newer</a>{/newer} 
       {newest}<a href="{path='group/template'}">Newest</a>{/newest}
     {/exp:timetravel}
+    
+    {exp:channel:entries channel='default_site'}
+        // Your entry data
+    {/exp:channel:entries}
 
 ### Parameters
 
@@ -29,3 +33,7 @@
 ## Note
 
 If you are using Timetravel to navigate through years, you need to add year='{segment_n}' and dynamic='off' to your channel:entries tag.
+
+    {exp:channel:entries channel='default_site' dynamic='off' year='{segment_n}'}
+        // Your entry data
+    {/exp:channel:entries}
