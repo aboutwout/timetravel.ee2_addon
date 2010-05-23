@@ -362,14 +362,9 @@ If you are using Timetravel to wakl through years, you need to add year='{segmen
 }
 // END CLASS
 
-function debug($vars) {
-  echo "<pre>";
-  print_r($vars);
-  echo "</pre>";
-}
-
 /**
-* This object is used as a placeholder for a preg_replace_callback function
+* This object is used as a placeholder for the preg_replace_callback
+* function that alters the path variable.
 */
 class Timepath
 {
