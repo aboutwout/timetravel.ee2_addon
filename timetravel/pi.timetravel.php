@@ -32,7 +32,7 @@ class Timetravel {
 	* @var string
 	*/
 	var $tagdata = '';
-
+	
 	/**
 	* TODO
 	*
@@ -97,115 +97,6 @@ class Timetravel {
     'year' => 'Y'
   );
 
-
-  // =====================
-  // Plugin parameters
-  // =====================
-  /**
-  * ...
-  * @todo add description
-  * @var array
-  */
-  var $author_id = array();
-
-  /**
-  * Period used to split the entries
-  *
-  * @var string
-  */
-  var $by = 'day';
-  
-  /**
-  * ...
-  * @todo add description
-  * @var array
-  */
-  var $category = array();
-
-  /**
-  * ...
-  * @todo add description
-  * @var array
-  */
-  var $category_group = array();
-  
-  /**
-  * ...
-  * @todo add description
-  * @var array
-  */
-  var $channel = array();
-
-  /**
-  * ...
-  * @todo add description
-  * @var false|int
-  */
-  var $entry_id_from = false;
-
-  /**
-  * ...
-  * @todo add description
-  * @var false|int
-  */
-  var $entry_id_to = false;
-
-  /**
-  * ...
-  * @todo add description
-  * @var array
-  */
-  var $group_id = array();
-
-  /**
-  * ...
-  * @todo add description
-  * @var bool
-  */
-  var $show_expired = false;
-
-  /**
-  * ...
-  * @todo add description
-  * @var bool
-  */
-  var $show_future_entries = false;
-
-  /**
-  * ...
-  * @todo add description
-  * @var array
-  */
-  var $status = array('open');
-
-  /**
-  * ...
-  * @todo add description
-  * @var false|int
-  */
-  var $start_on = false;
-
-  /**
-  * ...
-  * @todo add description
-  * @var false|int
-  */
-  var $stop_before = false;
-
-  /**
-  * ...
-  * @todo add description
-  * @var bool
-  */
-  var $uncategorized_entries = true;
-
-  /**
-  * ...
-  * @todo add description
-  * @var array
-  */
-  var $username = array();
-
 	/**
 	* PHP4 Constructor
 	*
@@ -229,9 +120,12 @@ class Timetravel {
 	  if($this->_is_single_entry_page()) {
 	    return false;
 	  }
-	  
+		  
 	  $this->tagdata = $this->EE->TMPL->tagdata;
     
+    $this->by = $this->EE->TMPL->fetch_param('by') ? $this->EE->TMPL->fetch_param('by') : $this->by;
+
+	  $this->_set_current_period();    
     $this->_build_query();
     $this->_parse_template();
     
@@ -265,6 +159,11 @@ class Timetravel {
           break;
       }
       
+      if($time === 0) {
+        $tagdata = $this->EE->TMPL->delete_var_pairs($key, $key, $tagdata);
+        continue;
+      }
+      
       $inner = $this->EE->TMPL->fetch_data_between_var_pairs($tagdata, $key);
       
       if (strpos($inner, 'path=') !== FALSE)
@@ -276,25 +175,89 @@ class Timetravel {
   		
       $tagdata = preg_replace("/".LD.$key.RD."(.*?)".LD.'\/'.$key.RD."/s", $inner, $tagdata);
     }
-    
+        
     $this->return_data = $tagdata;
   }
   // END _parse_template
-
-
-  function _fetch_params()
-  {
-    // Do something awesome
-  }
-  // END _fetch_params
 
   
   function _build_query()
   {
     // Do something awesome
+    $allowed_params = array('by', 'channel', 'author_id', 'category', 'category_group', 'entry_id_from', 'entry_id_to', 'group_id', 'show_expired', 'show_future_entries', 'status', 'start_on','stop_before', 'uncategorized_entries', 'username');
+        
+    foreach($this->EE->TMPL->tagparams as $param => $val)
+    {
+      if(!in_array($param, $allowed_params)) {
+        unset($this->EE->TMPL->tagparams[$param]);
+      }
+    }
     
-    $this->current = $this->EE->localize->now;
+    $this->EE->TMPL->tagparams['dynamic'] = 'off';
+  
+		if ( ! class_exists('Channel'))
+		{
+			require PATH_MOD.'channel/mod.channel.php';
+		}
+
+		$C = new Channel;
+		$C->build_sql_query();
+
+    if ($C->sql == '')
+    {
+    	return $this->EE->TMPL->no_results();
+    }
+
+    $this->query = $this->EE->db->query($C->sql);
+
+		if ($this->query->num_rows() == 0)
+		{
+			return $this->EE->TMPL->no_results();
+		}
+		
+		foreach($this->query->result() as $entry)
+		{
+		  
+		  $loc = $this->EE->localize->set_localized_time($entry->entry_date);
+	    $day = intval(date('d', $loc));
+	    $month = intval(date('m', $loc));
+	    $year = intval(date('Y', $loc));
+	    		  
+		  switch($this->by)
+		  {		    
+		    default:
+		    case 'day':
+  		    $this->periods[] = mktime(0, 0, 0, $month, $day, $year);
+  		    break;
+		    case 'month':
+  		    $this->periods[] = mktime(0, 0, 0, $month, 1, $year);
+  		    break;
+		    case 'year':
+  		    $this->periods[] = mktime(0, 0, 0, 1, 1, $year);
+  		    break;
+		      
+		  }
+		}
+		
+		$this->periods = array_unique($this->periods);
+    rsort($this->periods);
     
+    $cnt = count($this->periods)-1;
+        
+    $currIndex = array_search($this->current, $this->periods);
+    
+    if($currIndex === false) {
+      $this->periods[] = $this->current;
+      $this->periods = array_unique($this->periods);
+      rsort($this->periods);
+      $currIndex = array_search($this->current, $this->periods);
+    }
+        
+    $this->oldest = isset($this->periods[$cnt]) && $this->periods[$cnt] != $this->current ? $this->periods[$cnt] : 0;
+    $this->older = isset($this->periods[$currIndex+1]) ? $this->periods[$currIndex+1] : 0;
+    $this->newer = isset($this->periods[$currIndex-1]) ? $this->periods[$currIndex-1] : 0;
+    $this->newest = isset($this->periods[0]) && $this->periods[0] != $this->current ? $this->periods[0] : 0;
+		
   }
   // END _build_query
   
@@ -315,6 +278,40 @@ class Timetravel {
   }
   // END _is_single_entry_page
 
+  /**
+	* Set the currently watched day from the URI
+	* or the present day if no valid date has been set.
+	*
+	* @return	void
+	*/
+  function _set_current_period()
+  {
+     
+    switch($this->by)
+    {
+      case 'day':
+        preg_match('/(?P<year>\d{4})\/(?P<month>\d{2})\/(?P<day>\d{2})/', $this->EE->uri->query_string, $parts);
+        if( isset($parts['year']) && isset($parts['month']) && isset($parts['day']) )
+        {
+          $this->current = mktime(0, 0, 0, $parts['month'], $parts['day'], $parts['year']);
+        }
+        break;
+      case 'month':
+        preg_match('/(?P<year>\d{4})\/(?P<month>\d{2})/', $this->EE->uri->query_string, $parts);
+        if( isset($parts['year']) && isset($parts['month']))
+        {
+          $this->current = mktime(0, 0, 0, $parts['month'], 1, $parts['year']);
+        }
+        break;
+      case 'year':
+        preg_match('/(?P<year>\d{4})/', $this->EE->uri->query_string, $parts);
+        if( isset($parts['year']))
+        {
+          $this->current = mktime(0, 0, 0, 1, 1, $parts['year']);
+        }      
+        break;
+    } 
+  }
 
 	/**
 	* Plugin Usage
@@ -331,7 +328,7 @@ class Timetravel {
     author_id='1'
     category='1'
     category_group='1'
-    channel='static'
+    channel='default_site'
     entry_id_from='1'
     entry_id_to='20'
     group_id=''
@@ -341,7 +338,7 @@ class Timetravel {
     start_on='2004-06-05 20:00'
     stop_before='2010-06-05 20:00'
     uncategorized_entries='no'
-    username='wouter'
+    username='name'
   }
 
   {oldest}<a href="{path='plugins/timetravel'}">&laquo;Oldest</a>{/oldest} 
@@ -350,7 +347,9 @@ class Timetravel {
   {newer}<a href="{path='plugins/timetravel'}">Newer&rsaquo;</a>{/newer} 
   {newest}<a href="{path='plugins/timetravel'}">Newest&raquo;</a>{/newest}
 
-    {/exp:timetravel}
+{/exp:timetravel}
+
+If you are using Timetravel to wakl through years, you need to add year='{segment_n}' and dynamic='off' to your channel:entries tag.
 		
 <?php
 		$buffer = ob_get_contents();
