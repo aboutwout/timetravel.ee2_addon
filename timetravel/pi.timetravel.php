@@ -143,6 +143,8 @@ class Timetravel {
     	{				
     		$tagdata = str_replace($matches[0][$j], $this->EE->localize->decode_date($matches[2][$j], $this->current), $this->tagdata);
     	}
+    } else {
+      $tagdata = $this->tagdata;
     }
     $tagdata = str_replace(LD.'current'.RD, $this->current, $tagdata);
 
