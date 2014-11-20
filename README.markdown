@@ -1,13 +1,13 @@
 ## Usage
 
     {exp:timetravel by='day' channel='default_site'}
-      {oldest}<a href="{path='group/template'}">Oldest</a>{/oldest} 
-      {older}<a href="{path='group/template'}">Older</a>{/older} 
+      {oldest}<a href="{path='group/template'}">Oldest</a>{/oldest}
+      {older}<a href="{path='group/template'}">Older</a>{/older}
       <strong>{current format='%F %j%S, %Y'}</strong>
-      {newer}<a href="{path='group/template'}">Newer</a>{/newer} 
+      {newer}<a href="{path='group/template'}">Newer</a>{/newer}
       {newest}<a href="{path='group/template'}">Newest</a>{/newest}
     {/exp:timetravel}
-    
+
     {exp:channel:entries channel='default_site'}
         // Your entry data
     {/exp:channel:entries}

@@ -32,28 +32,28 @@ class Timetravel {
 	* @var string
 	*/
 	var $tagdata = '';
-	
+
 	/**
 	* TODO
 	*
 	* @var array
 	*/
 	var $periods = array();
-	
+
 	/**
 	* TODO
 	*
 	* @var int
 	*/
 	var $oldest = 0;
-	
+
 	/**
 	* TODO
 	*
 	* @var int
 	*/
 	var $older = 0;
-	
+
 	/**
 	* TODO
 	*
@@ -67,7 +67,7 @@ class Timetravel {
 	* @var int
 	*/
 	var $newer = 0;
-	
+
 	/**
 	* TODO
 	*
@@ -85,7 +85,7 @@ class Timetravel {
     'month' => 'Ym',
     'year' => 'Y'
 	);
-	
+
   /**
   * ...
   * @todo Add variable description
@@ -116,21 +116,21 @@ class Timetravel {
 	function __construct()
 	{
     $this->EE =& get_instance();
-	  
+
 	  if($this->_is_single_entry_page()) {
 	    return false;
 	  }
-		  
+
 	  $this->tagdata = $this->EE->TMPL->tagdata;
-    
+
     $this->by = $this->EE->TMPL->fetch_param('by') ? $this->EE->TMPL->fetch_param('by') : $this->by;
 
-	  $this->_set_current_period();    
+	  $this->_set_current_period();
     $this->_build_query();
     $this->_parse_template();
-    
+
     return $this->return_data;
- 
+
 	}
 	// END constructor
 
@@ -138,9 +138,9 @@ class Timetravel {
   {
     // Find a parse the {current} tag
     if (strpos($this->tagdata, LD.'current') !== FALSE && preg_match_all("/".LD."current\s+format=([\"\'])([^\\1]*?)\\1".RD."/", $this->tagdata, $matches))
-    {				
+    {
     	for ($j = 0; $j < count($matches[0]); $j++)
-    	{				
+    	{
     		$tagdata = str_replace($matches[0][$j], $this->EE->localize->decode_date($matches[2][$j], $this->current), $this->tagdata);
     	}
     } else {
@@ -160,43 +160,43 @@ class Timetravel {
           $time = $this->$key;
           break;
       }
-      
+
       if($time === 0) {
         $tagdata = $this->EE->TMPL->delete_var_pairs($key, $key, $tagdata);
         continue;
       }
-      
+
       $inner = $this->EE->TMPL->fetch_data_between_var_pairs($tagdata, $key);
-      
+
       if (strpos($inner, 'path=') !== FALSE)
   		{
   		  $tp = new Timetravel_path();
   		  $tp->time = date($this->url_formats[$this->by], $time);
         $inner = preg_replace_callback("/".LD."\s*path=(.*?)".RD."/", array(&$tp, 'alter_path'), $inner);
   		}
-  		
+
       $tagdata = preg_replace("/".LD.$key.RD."(.*?)".LD.'\/'.$key.RD."/s", $inner, $tagdata);
     }
-        
+
     $this->return_data = $tagdata;
   }
   // END _parse_template
 
-  
+
   function _build_query()
   {
     // Do something awesome
     $allowed_params = array('by', 'channel', 'author_id', 'category', 'category_group', 'entry_id_from', 'entry_id_to', 'group_id', 'show_expired', 'show_future_entries', 'status', 'start_on','stop_before', 'uncategorized_entries', 'username');
-        
+
     foreach($this->EE->TMPL->tagparams as $param => $val)
     {
       if(!in_array($param, $allowed_params)) {
         unset($this->EE->TMPL->tagparams[$param]);
       }
     }
-    
+
     $this->EE->TMPL->tagparams['dynamic'] = 'off';
-  
+
 		if ( ! class_exists('Channel'))
 		{
 			require PATH_MOD.'channel/mod.channel.php';
@@ -216,17 +216,17 @@ class Timetravel {
 		{
 			return $this->EE->TMPL->no_results();
 		}
-		
+
 		foreach($this->query->result() as $entry)
 		{
-		  
+
 		  $loc = $this->EE->localize->set_localized_time($entry->entry_date);
 	    $day = intval(date('d', $loc));
 	    $month = intval(date('m', $loc));
 	    $year = intval(date('Y', $loc));
-	    		  
+
 		  switch($this->by)
-		  {		    
+		  {
 		    default:
 		    case 'day':
   		    $this->periods[] = mktime(0, 0, 0, $month, $day, $year);
@@ -237,32 +237,32 @@ class Timetravel {
 		    case 'year':
   		    $this->periods[] = mktime(0, 0, 0, 1, 1, $year);
   		    break;
-		      
+
 		  }
 		}
-		
+
 		$this->periods = array_unique($this->periods);
     rsort($this->periods);
-    
+
     $cnt = count($this->periods)-1;
-        
+
     $currIndex = array_search($this->current, $this->periods);
-    
+
     if($currIndex === false) {
       $this->periods[] = $this->current;
       $this->periods = array_unique($this->periods);
       rsort($this->periods);
       $currIndex = array_search($this->current, $this->periods);
     }
-        
+
     $this->oldest = isset($this->periods[$cnt]) && $this->periods[$cnt] != $this->current ? $this->periods[$cnt] : 0;
     $this->older = isset($this->periods[$currIndex+1]) ? $this->periods[$currIndex+1] : 0;
     $this->newer = isset($this->periods[$currIndex-1]) ? $this->periods[$currIndex-1] : 0;
     $this->newest = isset($this->periods[0]) && $this->periods[0] != $this->current ? $this->periods[0] : 0;
-		
+
   }
   // END _build_query
-  
+
   /**
 	* Checks if the currently viewed page is a single entry page
 	*
@@ -270,12 +270,12 @@ class Timetravel {
 	*/
   function _is_single_entry_page()
   {
-    
+
     $in = $this->EE->uri->query_string;
 
  	  $results = $this->EE->db->query("SELECT entry_id, url_title FROM exp_channel_titles WHERE entry_id = '$in' OR url_title = '$in'");
-    
-    return ($results->num_rows() > 0) ? true : false;    
+
+    return ($results->num_rows() > 0) ? true : false;
 
   }
   // END _is_single_entry_page
@@ -288,7 +288,7 @@ class Timetravel {
 	*/
   function _set_current_period()
   {
-     
+
     switch($this->by)
     {
       case 'day':
@@ -310,21 +310,21 @@ class Timetravel {
         if( isset($parts['year']))
         {
           $this->current = mktime(0, 0, 0, 1, 1, $parts['year']);
-        }      
+        }
         break;
-    } 
+    }
   }
 
 	/**
 	* Plugin Usage
 	*
 	* @return	string
-	*/    
+	*/
 	function usage()
 	{
-		ob_start(); 
+		ob_start();
 ?>
-		
+
   {exp:timetravel
     by='day'
     author_id='1'
@@ -343,19 +343,19 @@ class Timetravel {
     username='name'
   }
 
-  {oldest}<a href="{path='plugins/timetravel'}">&laquo;Oldest</a>{/oldest} 
-  {older}<a href="{path='plugins/timetravel'}">&lsaquo;Older</a>{/older} 
+  {oldest}<a href="{path='plugins/timetravel'}">&laquo;Oldest</a>{/oldest}
+  {older}<a href="{path='plugins/timetravel'}">&lsaquo;Older</a>{/older}
   <strong>{current format='%F %j%S, %Y'}</strong>
-  {newer}<a href="{path='plugins/timetravel'}">Newer&rsaquo;</a>{/newer} 
+  {newer}<a href="{path='plugins/timetravel'}">Newer&rsaquo;</a>{/newer}
   {newest}<a href="{path='plugins/timetravel'}">Newest&raquo;</a>{/newest}
 
 {/exp:timetravel}
 
 If you are using Timetravel to wakl through years, you need to add year='{segment_n}' and dynamic='off' to your channel:entries tag.
-		
+
 <?php
 		$buffer = ob_get_contents();
-		ob_end_clean(); 
+		ob_end_clean();
 
 		return $buffer;
 	}
@@ -371,17 +371,17 @@ If you are using Timetravel to wakl through years, you need to add year='{segmen
 class Timetravel_path
 {
   var $time;
-  
-  function alter_path($matches) 
+
+  function alter_path($matches)
   {
     $src = str_replace(array('"', "'"), '', $matches[1]);
-    
+
     $path = explode('/', $src);
     $time = explode('/', $this->time);
-    
+
     $repl = implode('/', array_merge($path, $time));
     return str_replace($matches[1], "'".$repl."'", $matches[0]);
-    
+
   }
 }
 
